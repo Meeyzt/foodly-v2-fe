@@ -1,13 +1,27 @@
 import { httpClient } from "@/shared/api/http-client";
 import type { ApiResponse, Paginated } from "@/shared/types/api";
 
-type Entity = { id: string; name: string };
+export type Entity = { id: string; name: string };
 
 export const managerApi = {
   getBranches: () => httpClient.get<ApiResponse<Paginated<Entity>>>("/manager/branches"),
   getMenus: (branchId: string) => httpClient.get<ApiResponse<Paginated<Entity>>>("/manager/menus", { params: { branchId } }),
-  getCategories: (menuId: string) =>
-    httpClient.get<ApiResponse<Paginated<Entity>>>("/manager/categories", { params: { menuId } }),
+  createMenu: (payload: { branchId: string; name: string }) => httpClient.post<ApiResponse<Entity>>("/manager/menus", payload),
+  updateMenu: (menuId: string, payload: { name: string }) => httpClient.put<ApiResponse<Entity>>(`/manager/menus/${menuId}`, payload),
+  deleteMenu: (menuId: string) => httpClient.delete<ApiResponse<{ id: string }>>(`/manager/menus/${menuId}`),
+
+  getCategories: (menuId: string) => httpClient.get<ApiResponse<Paginated<Entity>>>("/manager/categories", { params: { menuId } }),
+  createCategory: (payload: { menuId: string; name: string }) =>
+    httpClient.post<ApiResponse<Entity>>("/manager/categories", payload),
+  updateCategory: (categoryId: string, payload: { name: string }) =>
+    httpClient.put<ApiResponse<Entity>>(`/manager/categories/${categoryId}`, payload),
+  deleteCategory: (categoryId: string) => httpClient.delete<ApiResponse<{ id: string }>>(`/manager/categories/${categoryId}`),
+
   getProducts: (categoryId: string) =>
     httpClient.get<ApiResponse<Paginated<Entity>>>("/manager/products", { params: { categoryId } }),
+  createProduct: (payload: { categoryId: string; name: string }) =>
+    httpClient.post<ApiResponse<Entity>>("/manager/products", payload),
+  updateProduct: (productId: string, payload: { name: string }) =>
+    httpClient.put<ApiResponse<Entity>>(`/manager/products/${productId}`, payload),
+  deleteProduct: (productId: string) => httpClient.delete<ApiResponse<{ id: string }>>(`/manager/products/${productId}`),
 };

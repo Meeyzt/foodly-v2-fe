@@ -1,6 +1,9 @@
 import { rest } from "msw";
 import type { ApiResponse } from "@/shared/types/api";
 
+const validateOrder = (payload: { tableId: string; items: Array<{ productId: string; quantity: number; note?: string }> }) =>
+  Boolean(payload.tableId) && payload.items.length > 0;
+
 export const staffHandlers = [
   rest.post("*/staff/scan/resolve", async (req, res, ctx) => {
     const payload = (await req.json()) as { qrRaw: string };
@@ -10,13 +13,22 @@ export const staffHandlers = [
     return res(ctx.json({ success: true, data: { tableId: "t-12" } } satisfies ApiResponse<{ tableId: string }>));
   }),
 
-  rest.post("*/staff/table-orders", async (req, res, ctx) => {
+  rest.post("*/staff/orders", async (req, res, ctx) => {
     const payload = (await req.json()) as { tableId: string; items: Array<{ productId: string; quantity: number; note?: string }> };
-    if (!payload.tableId || payload.items.length < 1) {
+    if (!validateOrder(payload)) {
       return res(ctx.status(400), ctx.json({ success: false, message: "Invalid order" }));
     }
 
-    return res(ctx.json({ success: true, data: { orderId: "ord-staff-1" } } satisfies ApiResponse<{ orderId: string }>));
+    return res(ctx.json({ success: true, data: { orderId: "ord-staff-contract-1" } } satisfies ApiResponse<{ orderId: string }>));
+  }),
+
+  rest.post("*/staff/table-orders", async (req, res, ctx) => {
+    const payload = (await req.json()) as { tableId: string; items: Array<{ productId: string; quantity: number; note?: string }> };
+    if (!validateOrder(payload)) {
+      return res(ctx.status(400), ctx.json({ success: false, message: "Invalid order" }));
+    }
+
+    return res(ctx.json({ success: true, data: { orderId: "ord-staff-mock-1" } } satisfies ApiResponse<{ orderId: string }>));
   }),
 
   rest.get("*/staff/daily-summary", (req, res, ctx) => {

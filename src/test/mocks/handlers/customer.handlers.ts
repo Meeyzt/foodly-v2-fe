@@ -14,6 +14,8 @@ const productsByRestaurant: Record<string, ProductDTO[]> = {
   "r-3": [{ id: "p-3", name: "Penne Arrabbiata", description: "spicy tomato", price: 260 }],
 };
 
+const reviewedOrderIds = new Set<string>();
+
 export const customerHandlers = [
   rest.get("*/customer/explore", (req, res, ctx) => {
     const nearby = req.url.searchParams.get("nearby");
@@ -77,5 +79,34 @@ export const customerHandlers = [
         data: { items: orders, total: orders.length },
       } satisfies ApiResponse<Paginated<OrderDTO>>),
     );
+  }),
+
+  rest.get("*/customer/orders/:orderId/review-eligibility", (req, res, ctx) => {
+    const orderId = req.params.orderId as string;
+    const isEligible = orderId === "ord-101" && !reviewedOrderIds.has(orderId);
+
+    return res(
+      ctx.json({
+        success: true,
+        data: {
+          orderId,
+          eligible: isEligible,
+          reason: isEligible ? undefined : "Order is not eligible for a new review",
+        },
+      }),
+    );
+  }),
+
+  rest.post("*/customer/orders/:orderId/reviews", async (req, res, ctx) => {
+    const orderId = req.params.orderId as string;
+    const payload = (await req.json()) as { rating: number; comment: string };
+
+    if (payload.rating < 1 || payload.rating > 5 || payload.comment.trim().length < 5) {
+      return res(ctx.status(400), ctx.json({ success: false, message: "Invalid review payload" }));
+    }
+
+    reviewedOrderIds.add(orderId);
+
+    return res(ctx.json({ success: true, data: { reviewId: `rev-${orderId}` } } satisfies ApiResponse<{ reviewId: string }>));
   }),
 ];
