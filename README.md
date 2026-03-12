@@ -1,6 +1,6 @@
 # foodly-v2-fe
 
-Greenfield frontend repo for Foodly v2.
+Greenfield frontend repo for **Foodly v2**.
 
 ## Tech Choice
 
@@ -26,6 +26,13 @@ Greenfield frontend repo for Foodly v2.
   - Vitest + Testing Library
   - Build verification
 
+## Sprint-0 Documentation
+
+- `docs/PRD_DRAFT.md` → hedef kullanıcı, ana akışlar, MVP kapsam
+- `docs/IA_ROUTES.md` → bilgi mimarisi ve route haritası
+- `docs/FE_ARCH.md` → state/api/auth guard/error handling mimarisi
+- `docs/SPRINT0_TASKS.md` → Sprint-0 backlog (dependency + DoD + test kriteri)
+
 ## Project Structure
 
 ```txt
@@ -45,6 +52,7 @@ src/
     types/
     ui/
   test/
+docs/
 ```
 
 ## Setup
