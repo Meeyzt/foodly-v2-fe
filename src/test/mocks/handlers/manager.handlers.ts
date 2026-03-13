@@ -22,6 +22,29 @@ const productsByCategory: Record<string, Entity[]> = {
   "c-2": [{ id: "p-2", name: "Chicken Bowl" }],
 };
 
+const analyticsByBranch: Record<string, { grossRevenue: number; orderCount: number; cancelCount: number; topProducts: Array<{ productId: string; productName: string; quantity: number; revenue: number }> }> = {
+  "b-1": {
+    grossRevenue: 128_450,
+    orderCount: 426,
+    cancelCount: 11,
+    topProducts: [
+      { productId: "p-1", productName: "Classic Burger", quantity: 138, revenue: 44_160 },
+      { productId: "p-9", productName: "Cheese Burger", quantity: 112, revenue: 38_080 },
+      { productId: "p-3", productName: "Ayran", quantity: 176, revenue: 13_200 },
+    ],
+  },
+  "b-2": {
+    grossRevenue: 96_340,
+    orderCount: 315,
+    cancelCount: 7,
+    topProducts: [
+      { productId: "p-2", productName: "Chicken Bowl", quantity: 121, revenue: 42_350 },
+      { productId: "p-7", productName: "Veggie Bowl", quantity: 87, revenue: 26_100 },
+      { productId: "p-8", productName: "Cold Brew", quantity: 152, revenue: 19_760 },
+    ],
+  },
+};
+
 const ok = <T>(data: T): ApiResponse<T> => ({ success: true, data });
 
 const uniqueId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 7)}`;
@@ -36,6 +59,52 @@ const findCollectionById = (store: Record<string, Entity[]>, entityId: string) =
 
 export const managerHandlers = [
   rest.get("*/manager/branches", (_req, res, ctx) => res(ctx.json(ok<Paginated<Entity>>({ items: branches, total: branches.length })))),
+
+  rest.get("*/manager/analytics", (req, res, ctx) => {
+    const branchId = req.url.searchParams.get("branchId") ?? "";
+    const from = req.url.searchParams.get("from") ?? "";
+    const to = req.url.searchParams.get("to") ?? "";
+    const metrics = analyticsByBranch[branchId] ?? analyticsByBranch["b-1"];
+    const avgBasket = metrics.orderCount === 0 ? 0 : Number((metrics.grossRevenue / metrics.orderCount).toFixed(2));
+
+    return res(
+      ctx.json(
+        ok({
+          branchId,
+          from,
+          to,
+          grossRevenue: metrics.grossRevenue,
+          orderCount: metrics.orderCount,
+          avgBasket,
+          cancelCount: metrics.cancelCount,
+          topProducts: metrics.topProducts,
+        }),
+      ),
+    );
+  }),
+
+  rest.get("*/manager/dashboard-metrics", (req, res, ctx) => {
+    const branchId = req.url.searchParams.get("branchId") ?? "";
+    const from = req.url.searchParams.get("from") ?? "";
+    const to = req.url.searchParams.get("to") ?? "";
+    const metrics = analyticsByBranch[branchId] ?? analyticsByBranch["b-1"];
+    const avgBasket = metrics.orderCount === 0 ? 0 : Number((metrics.grossRevenue / metrics.orderCount).toFixed(2));
+
+    return res(
+      ctx.json(
+        ok({
+          branchId,
+          from,
+          to,
+          grossRevenue: metrics.grossRevenue,
+          orderCount: metrics.orderCount,
+          avgBasket,
+          cancelCount: metrics.cancelCount,
+          topProducts: metrics.topProducts,
+        }),
+      ),
+    );
+  }),
 
   rest.get("*/manager/menus", (req, res, ctx) => {
     const branchId = req.url.searchParams.get("branchId") ?? "";
