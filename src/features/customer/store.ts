@@ -34,19 +34,57 @@ const restaurants: Restaurant[] = [
   },
 ];
 
-type CartItem = Product & { qty: number; note?: string };
+export type CartItem = Product & { qty: number; note?: string };
+
+export type TableOrder = {
+  id: string;
+  tableId: string;
+  items: CartItem[];
+  total: number;
+  mergedCount: number;
+  lastUpdatedAt: string;
+};
+
+type PlaceOrderResult = { orderId: string; merged: boolean; total: number; itemCount: number };
 
 type CustomerStore = {
   restaurants: Restaurant[];
   cart: CartItem[];
   tableId: string;
+  activeTableOrder?: TableOrder;
+  recentlyPlacedOrder?: PlaceOrderResult;
   addToCart: (product: Product) => void;
   removeFromCart: (id: string) => void;
   setOrderNote: (id: string, note: string) => void;
   setTableId: (id: string) => void;
+  placeOrMergeOrder: () => PlaceOrderResult | undefined;
 };
 
-export const useCustomerStore = create<CustomerStore>((set) => ({
+const calcTotal = (items: CartItem[]) => items.reduce((acc, item) => acc + item.price * item.qty, 0);
+
+const mergeItems = (existing: CartItem[], incoming: CartItem[]): CartItem[] => {
+  const map = new Map(existing.map((item) => [item.id, { ...item }]));
+
+  incoming.forEach((item) => {
+    const found = map.get(item.id);
+    if (!found) {
+      map.set(item.id, { ...item });
+      return;
+    }
+
+    map.set(item.id, {
+      ...found,
+      qty: found.qty + item.qty,
+      note: [found.note, item.note].filter(Boolean).join(" | ") || undefined,
+    });
+  });
+
+  return Array.from(map.values());
+};
+
+const normalizeTableId = (tableId: string) => tableId.trim().toUpperCase();
+
+export const useCustomerStore = create<CustomerStore>((set, get) => ({
   restaurants,
   cart: [],
   tableId: "T-12",
@@ -59,6 +97,50 @@ export const useCustomerStore = create<CustomerStore>((set) => ({
       return { cart: [...state.cart, { ...product, qty: 1 }] };
     }),
   removeFromCart: (id) => set((state) => ({ cart: state.cart.filter((i) => i.id !== id) })),
-  setOrderNote: (id, note) => set((state) => ({ cart: state.cart.map((i) => (i.id === id ? { ...i, note } : i)) })),
-  setTableId: (tableId) => set({ tableId }),
+  setOrderNote: (id, note) =>
+    set((state) => ({ cart: state.cart.map((i) => (i.id === id ? { ...i, note: note.trim() || undefined } : i)) })),
+  setTableId: (tableId) => set({ tableId: normalizeTableId(tableId) }),
+  placeOrMergeOrder: () => {
+    const state = get();
+    if (state.cart.length === 0) return undefined;
+
+    const tableId = normalizeTableId(state.tableId) || "T-NA";
+    const itemCount = state.cart.reduce((acc, item) => acc + item.qty, 0);
+    const now = new Date().toISOString();
+
+    const canMerge = state.activeTableOrder?.tableId === tableId;
+    const existingOrder = state.activeTableOrder;
+    const nextOrder: TableOrder = canMerge && existingOrder
+      ? {
+          ...existingOrder,
+          items: mergeItems(existingOrder.items, state.cart),
+          mergedCount: existingOrder.mergedCount + 1,
+          lastUpdatedAt: now,
+          total: calcTotal(mergeItems(existingOrder.items, state.cart)),
+        }
+      : {
+          id: `${tableId}-${Date.now()}`,
+          tableId,
+          items: state.cart.map((item) => ({ ...item })),
+          mergedCount: 0,
+          lastUpdatedAt: now,
+          total: calcTotal(state.cart),
+        };
+
+    const result: PlaceOrderResult = {
+      orderId: nextOrder.id,
+      merged: canMerge,
+      total: nextOrder.total,
+      itemCount,
+    };
+
+    set({
+      tableId,
+      activeTableOrder: nextOrder,
+      cart: [],
+      recentlyPlacedOrder: result,
+    });
+
+    return result;
+  },
 }));

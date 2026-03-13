@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clearSession, getRoleFromSession } from "@/features/auth/session";
+import { useCustomerStore } from "@/features/customer/store";
 import type { UserRole } from "@/shared/auth/roles";
 
 type NavItem = { href: string; label: string };
@@ -35,12 +36,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navItems = navByRole[role];
   const pathname = usePathname();
   const router = useRouter();
+  const tableId = useCustomerStore((s) => s.tableId);
+  const activeTableOrder = useCustomerStore((s) => s.activeTableOrder);
 
   return (
     <div className="shell">
       <aside className="sidebar">
         <h3>Foodly v2</h3>
         <small>{role}</small>
+        {role === "Customer" ? (
+          <div style={{ margin: "8px 0", fontSize: 12 }}>
+            <div>Masa: {tableId}</div>
+            {activeTableOrder ? <div>Aktif sipariş: {activeTableOrder.id}</div> : <div>Aktif sipariş yok</div>}
+          </div>
+        ) : null}
         <nav>
           {navItems.map((item) => (
             <Link key={item.href} href={item.href} className={pathname === item.href ? "active" : ""}>
