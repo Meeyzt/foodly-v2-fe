@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { staffApi } from "@/shared/api/contracts/staff";
 
-export default function TableOrdersPage() {
+function TableOrdersContent() {
+  const searchParams = useSearchParams();
+
   const [tableId, setTableId] = useState("t-12");
   const [productId, setProductId] = useState("p-1");
   const [quantity, setQuantity] = useState("1");
@@ -11,15 +14,23 @@ export default function TableOrdersPage() {
   const [message, setMessage] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    const scannedTableId = searchParams.get("tableId");
+    if (scannedTableId) {
+      setTableId(scannedTableId);
+      setMessage(`Tarama ile masa seçildi: ${scannedTableId}`);
+    }
+  }, [searchParams]);
+
   const submit = async () => {
     if (!tableId.trim()) {
-      setMessage("Table is required.");
+      setMessage("Masa bilgisi zorunludur.");
       return;
     }
 
     const qty = Number(quantity);
     if (!productId.trim() || !Number.isInteger(qty) || qty < 1) {
-      setMessage("Product and quantity are required.");
+      setMessage("Ürün ve adet bilgisi geçerli olmalı.");
       return;
     }
 
@@ -31,10 +42,10 @@ export default function TableOrdersPage() {
         tableId: tableId.trim(),
         items: [{ productId: productId.trim(), quantity: qty, note: note.trim() || undefined }],
       });
-      setMessage(`Order created: ${response.data.data.orderId}`);
+      setMessage(`Sipariş oluşturuldu: ${response.data.data.orderId}`);
       setNote("");
     } catch {
-      setMessage("Order creation failed.");
+      setMessage("Sipariş oluşturulamadı.");
     } finally {
       setSubmitting(false);
     }
@@ -42,27 +53,37 @@ export default function TableOrdersPage() {
 
   return (
     <section className="card">
-      <h1>Table Order Entry</h1>
+      <h1>Masa Siparişi Girişi</h1>
+      <p>QR ile çözümlenen masa için sipariş satırı oluşturulur.</p>
+
       <label>
-        Table Id
+        Masa Id
         <input value={tableId} onChange={(event) => setTableId(event.target.value)} />
       </label>
       <label>
-        Product Id
+        Ürün Id
         <input value={productId} onChange={(event) => setProductId(event.target.value)} />
       </label>
       <label>
-        Quantity
+        Adet
         <input value={quantity} onChange={(event) => setQuantity(event.target.value)} />
       </label>
       <label>
-        Note
+        Not
         <input value={note} onChange={(event) => setNote(event.target.value)} />
       </label>
       <button type="button" onClick={() => void submit()} disabled={submitting}>
-        {submitting ? "Submitting..." : "Create Order"}
+        {submitting ? "Gönderiliyor..." : "Sipariş Oluştur"}
       </button>
       {message ? <p>{message}</p> : null}
     </section>
+  );
+}
+
+export default function TableOrdersPage() {
+  return (
+    <Suspense fallback={<section className="card">Yükleniyor...</section>}>
+      <TableOrdersContent />
+    </Suspense>
   );
 }
