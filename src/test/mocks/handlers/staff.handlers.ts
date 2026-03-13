@@ -231,4 +231,107 @@ export const staffHandlers = [
       } satisfies ApiResponse<{ gross: number; orderCount: number; cancelCount: number }>),
     );
   }),
+
+  rest.get("*/staff/summary", (req, res, ctx) => {
+    const branchId = req.url.searchParams.get("branchId");
+    const day = req.url.searchParams.get("day");
+    if (!branchId || !day) {
+      return res(ctx.status(400), ctx.json({ success: false, message: "branchId and day are required" }));
+    }
+
+    return res(
+      ctx.json({
+        success: true,
+        data: { gross: 14250, orderCount: 83, cancelCount: 2 },
+      } satisfies ApiResponse<{ gross: number; orderCount: number; cancelCount: number }>),
+    );
+  }),
+
+  rest.get("*/staff/stock", (req, res, ctx) => {
+    const branchId = req.url.searchParams.get("branchId");
+    if (!branchId) {
+      return res(ctx.status(400), ctx.json({ success: false, message: "branchId is required" }));
+    }
+
+    return res(
+      ctx.json({
+        success: true,
+        data: {
+          items: [
+            {
+              productId: "p-1",
+              productName: "Cheeseburger",
+              currentStock: 34,
+              minThreshold: 20,
+              unit: "adet",
+              status: "OK",
+              lastUpdatedAt: new Date().toISOString(),
+            },
+            {
+              productId: "p-2",
+              productName: "Ayran",
+              currentStock: 8,
+              minThreshold: 12,
+              unit: "adet",
+              status: "LOW",
+              lastUpdatedAt: new Date().toISOString(),
+            },
+            {
+              productId: "p-9",
+              productName: "Mozzarella Sticks",
+              currentStock: 0,
+              minThreshold: 10,
+              unit: "porsiyon",
+              status: "OUT",
+              lastUpdatedAt: new Date().toISOString(),
+            },
+          ],
+        },
+      }),
+    );
+  }),
+
+  rest.get("*/staff/inventory", (req, res, ctx) => {
+    const branchId = req.url.searchParams.get("branchId");
+    if (!branchId) {
+      return res(ctx.status(400), ctx.json({ success: false, message: "branchId is required" }));
+    }
+
+    return res(
+      ctx.json({
+        success: true,
+        data: {
+          items: [
+            {
+              productId: "p-1",
+              productName: "Cheeseburger",
+              currentStock: 34,
+              minThreshold: 20,
+              unit: "adet",
+              status: "OK",
+              lastUpdatedAt: new Date().toISOString(),
+            },
+            {
+              productId: "p-2",
+              productName: "Ayran",
+              currentStock: 8,
+              minThreshold: 12,
+              unit: "adet",
+              status: "LOW",
+              lastUpdatedAt: new Date().toISOString(),
+            },
+            {
+              productId: "p-9",
+              productName: "Mozzarella Sticks",
+              currentStock: 0,
+              minThreshold: 10,
+              unit: "porsiyon",
+              status: "OUT",
+              lastUpdatedAt: new Date().toISOString(),
+            },
+          ],
+        },
+      }),
+    );
+  }),
 ];

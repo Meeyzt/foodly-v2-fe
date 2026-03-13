@@ -18,6 +18,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { href: "/staff/scan", label: "QR Scan" },
     { href: "/staff/table-orders", label: "Table Orders" },
     { href: "/staff/daily-summary", label: "Daily Summary" },
+    { href: "/staff/stock", label: "Stock" },
   ],
   BranchManager: [
     { href: "/manager/menu", label: "Menu" },

@@ -74,6 +74,42 @@ const closeTableCheckFallback = (tableId: string, payload: { paymentMethod: stri
     ...payload,
   });
 
+export type DailySummary = {
+  gross: number;
+  orderCount: number;
+  cancelCount: number;
+};
+
+export type StockItem = {
+  productId: string;
+  productName: string;
+  currentStock: number;
+  minThreshold: number;
+  unit: string;
+  status: "OK" | "LOW" | "OUT";
+  lastUpdatedAt: string;
+};
+
+const getDailySummaryContract = (branchId: string, day: string) =>
+  httpClient.get<ApiResponse<DailySummary>>("/staff/daily-summary", {
+    params: { branchId, day },
+  });
+
+const getDailySummaryFallback = (branchId: string, day: string) =>
+  httpClient.get<ApiResponse<DailySummary>>("/staff/summary", {
+    params: { branchId, day },
+  });
+
+const getStockOverviewContract = (branchId: string) =>
+  httpClient.get<ApiResponse<{ items: StockItem[] }>>("/staff/stock", {
+    params: { branchId },
+  });
+
+const getStockOverviewFallback = (branchId: string) =>
+  httpClient.get<ApiResponse<{ items: StockItem[] }>>("/staff/inventory", {
+    params: { branchId },
+  });
+
 export const staffApi = {
   resolveQr: (payload: { qrRaw: string }) => httpClient.post<ApiResponse<{ tableId: string }>>("/staff/scan/resolve", payload),
   createTableOrder: async (payload: CreateOrderPayload) => {
@@ -104,8 +140,18 @@ export const staffApi = {
       return closeTableCheckFallback(tableId, payload);
     }
   },
-  getDailySummary: (branchId: string, day: string) =>
-    httpClient.get<ApiResponse<{ gross: number; orderCount: number; cancelCount: number }>>("/staff/daily-summary", {
-      params: { branchId, day },
-    }),
+  getDailySummary: async (branchId: string, day: string) => {
+    try {
+      return await getDailySummaryContract(branchId, day);
+    } catch {
+      return getDailySummaryFallback(branchId, day);
+    }
+  },
+  getStockOverview: async (branchId: string) => {
+    try {
+      return await getStockOverviewContract(branchId);
+    } catch {
+      return getStockOverviewFallback(branchId);
+    }
+  },
 };
