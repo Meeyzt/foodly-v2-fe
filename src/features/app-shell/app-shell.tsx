@@ -27,6 +27,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
   BusinessAdmin: [
     { href: "/manager/branches", label: "Branches" },
     { href: "/manager/menu", label: "Menu" },
+    { href: "/manager/categories", label: "Categories" },
     { href: "/manager/products", label: "Products" },
   ],
 };
