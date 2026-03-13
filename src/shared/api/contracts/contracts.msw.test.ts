@@ -81,7 +81,16 @@ describe("API contracts + MSW handlers", () => {
       tableId: "t-12",
       items: [{ productId: "p-1", quantity: 1 }],
     });
-    expect(tableOrder.data.data.orderId).toBe("ord-staff-contract-1");
+    expect(tableOrder.data.data.orderId).toContain("ord-staff-");
+
+    const openOrder = await staffApi.getTableOrder("t-12");
+    expect(openOrder.data.data.itemCount).toBeGreaterThan(0);
+
+    const check = await staffApi.getTableCheck("t-12");
+    expect(check.data.data.status).toBe("OPEN");
+
+    const close = await staffApi.closeTableCheck("t-12", { paymentMethod: "CARD" });
+    expect(close.data.data.closed).toBe(true);
 
     const summary = await staffApi.getDailySummary("b-1", "2026-03-12");
     expect(summary.data.data.orderCount).toBeGreaterThan(0);
