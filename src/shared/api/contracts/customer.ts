@@ -1,9 +1,45 @@
 import { httpClient } from "@/shared/api/http-client";
 import type { ApiResponse, Paginated } from "@/shared/types/api";
 
-export type RestaurantDTO = { id: string; name: string; tags: string[]; isNearby: boolean; isPopular: boolean };
-export type ProductDTO = { id: string; name: string; description: string; price: number; imageUrl?: string };
-export type OrderDTO = { id: string; status: string; amount: number; reviewEligible: boolean };
+export type RestaurantDTO = {
+  id: string;
+  name: string;
+  tags: string[];
+  isNearby: boolean;
+  isPopular: boolean;
+  description?: string;
+  cuisine?: string;
+  etaMinutes?: number;
+  distanceKm?: number;
+  rating?: number;
+  reviewCount?: number;
+  priceLevel?: string;
+};
+
+export type ProductDTO = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl?: string;
+  category?: string;
+  badge?: string;
+  prepMinutes?: number;
+  popular?: boolean;
+  productType?: string;
+};
+
+export type OrderDTO = {
+  id: string;
+  status: string;
+  amount: number;
+  reviewEligible: boolean;
+  restaurantName?: string;
+  placedAt?: string;
+  itemCount?: number;
+  tableId?: string;
+  qrStatus?: string;
+};
 export type ReviewEligibilityDTO = { orderId: string; eligible: boolean; reason?: string };
 export type ReviewCreatePayload = { rating: number; comment: string };
 
